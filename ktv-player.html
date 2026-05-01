@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KTV 點歌伴唱機 | KTV Maker Pro</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.js (音訊處理引擎) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ktv: {
+                            dark: '#0a0a0a',
+                            panel: '#1a1a24',
+                            primary: '#b026ff',
+                            secondary: '#00d0ff',
+                            danger: '#ff1493'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .neon-text { text-shadow: 0 0 10px rgba(0, 208, 255, 0.7); }
+        .neon-box { box-shadow: 0 0 15px rgba(176, 38, 255, 0.3); }
+        /* 自訂卷軸 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1a1a24; }
+        ::-webkit-scrollbar-thumb { background: #4a4a5a; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b026ff; }
+    </style>
+</head>
+<body class="bg-ktv-dark text-white h-screen flex flex-col overflow-hidden font-sans selection:bg-ktv-danger selection:text-white">
+
+    <!-- 啟動解鎖畫面 (全螢幕覆蓋，必須點擊以啟動 Web Audio API) -->
+    <div id="startup-overlay" class="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center transition-opacity duration-500">
+        <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-ktv-primary to-ktv-secondary mb-8 neon-text">🎤 KTV 專屬伴唱機</h1>
+        <p class="text-gray-400 mb-8 text-lg">系統就緒，請點擊下方按鈕啟動音訊引擎</p>
+        <button id="btn-start-system" class="px-10 py-4 bg-gradient-to-r from-ktv-primary to-ktv-danger rounded-full text-xl font-bold hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,20,147,0.6)] animate-pulse">
+            進入包廂 (啟動引擎)
+        </button>
+    </div>
+
+    <!-- 頂部導覽列 -->
+    <header class="h-16 border-b border-white/10 flex items-center justify-between px-6 bg-ktv-panel">
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">🎵</span>
+            <h1 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ktv-secondary to-ktv-primary">KTV 伴唱機系統</h1>
+        </div>
+        <div class="text-sm font-mono text-ktv-secondary" id="clock">00:00:00</div>
+    </header>
+
+    <!-- 主要內容區 -->
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden p-4 gap-6">
+        
+        <!-- 左側：播放器與控制台 -->
+        <section class="flex-1 flex flex-col min-w-0 min-h-0">
+            <!-- 影片播放區 (新增 ID 供全螢幕使用，並加入 group 類別) -->
+            <div id="video-container" class="relative w-full flex-1 bg-black rounded-2xl overflow-hidden neon-box shadow-2xl flex items-center justify-center border border-white/5 min-h-0 group">
+                <video id="main-video" class="w-full h-full object-contain hidden" playsinline></video>
+                
+                <!-- 待機畫面 -->
+                <div id="standby-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-black">
+                    <div class="text-6xl mb-4 opacity-50">🎬</div>
+                    <h2 class="text-2xl font-bold text-gray-500 text-center px-4">請由右側歌單選擇歌曲播放</h2>
+                </div>
+
+                <!-- 🎯 全螢幕按鈕 (滑鼠移入時顯示) -->
+                <button id="btn-fullscreen" class="absolute top-4 right-4 p-3 bg-black/50 hover:bg-black/80 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10" title="全螢幕 (F)">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                </button>
+            </div>
+
+            <!-- 控制面板 -->
+            <div class="mt-4 flex-shrink-0 bg-ktv-panel rounded-2xl p-4 md:p-6 border border-white/10 flex flex-col justify-center relative">
+                
+                <!-- 🎯 播放進度條 -->
+                <div class="flex items-center gap-3 mb-4 text-xs font-mono text-gray-400">
+                    <span id="time-current">00:00</span>
+                    <input type="range" id="progress-bar" min="0" max="100" value="0" class="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500">
+                    <span id="time-total">00:00</span>
+                </div>
+
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    
+                    <!-- 播放狀態與功能鍵 -->
+                    <div class="flex items-center gap-4 flex-wrap justify-center">
+                        <button id="btn-play-pause" class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-ktv-primary flex items-center justify-center hover:bg-ktv-danger transition-colors disabled:opacity-50" title="播放/暫停 (空白鍵)" disabled>
+                            <svg id="icon-play" class="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                            <svg id="icon-pause" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                        </button>
+                        <button id="btn-next" class="px-5 py-3 rounded-full border border-white/20 hover:bg-white/10 font-bold transition-colors disabled:opacity-50" title="切換下一首 (N)" disabled>
+                            ⏭️ 切歌
+                        </button>
+                        <!-- 導唱功能切換按鈕 -->
+                        <button id="btn-vocal-toggle" class="px-5 py-3 rounded-full border border-ktv-primary text-ktv-primary hover:bg-ktv-primary hover:text-white font-bold transition-all disabled:opacity-50" title="切換伴唱/導唱 (V)" disabled>
+                            🎤 伴唱模式
+                        </button>
+                    </div>
+
+                    <!-- 升降 Key 控制區 -->
+                    <div class="flex-1 max-w-lg w-full bg-black/30 p-4 rounded-xl border border-white/5 relative">
+                        <!-- 🎯 快捷鍵提示標籤 (在大螢幕顯示) -->
+                        <div class="absolute -top-3 left-4 bg-ktv-panel px-3 py-0.5 text-[10px] text-gray-500 border border-white/10 rounded-full hidden md:block">
+                            快捷鍵：[空白] 播放/暫停 | [N] 切歌 | [V] 導/伴唱 | [↑][↓] 升降Key
+                        </div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm text-gray-400 font-bold">音高控制 (Pitch)</span>
+                            <span id="pitch-display" class="text-2xl font-mono font-bold text-green-400">原調</span>
+                        </div>
+                        
+                        <!-- 快速按鈕群 (更新顯示文字更直覺) -->
+                        <div class="grid grid-cols-5 gap-2 mb-1">
+                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-2 text-sm font-bold text-blue-300 transition-colors" data-pitch="-4" title="男唱女歌">降 4</button>
+                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-2 text-sm font-bold text-gray-300 transition-colors" data-pitch="down">降 b</button>
+                            <button class="pitch-btn bg-white/10 hover:bg-white/20 rounded py-2 text-sm font-bold text-white transition-colors" data-pitch="0">原調</button>
+                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-2 text-sm font-bold text-gray-300 transition-colors" data-pitch="up">升 #</button>
+                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-2 text-sm font-bold text-red-300 transition-colors" data-pitch="4" title="女唱男歌">升 4</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 右側：點歌單系統 -->
+        <section class="w-full lg:w-96 bg-ktv-panel rounded-2xl border border-white/10 flex flex-col flex-shrink-0">
+            <!-- 歌單頭部 -->
+            <div class="p-4 border-b border-white/10 flex items-center justify-between">
+                <h2 class="text-lg font-bold flex items-center gap-2">
+                    <span>📋</span> 待播歌單 (<span id="queue-count">0</span>)
+                </h2>
+                <!-- 隱藏的檔案上傳按鈕 -->
+                <input type="file" id="file-input" multiple accept="video/mp4,video/webm" class="hidden">
+                <button onclick="document.getElementById('file-input').click()" class="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-lg">
+                    + 點歌 (加入檔案)
+                </button>
+            </div>
+
+            <!-- 歌單列表 (捲動區) -->
+            <div class="flex-1 overflow-y-auto p-2" id="playlist-container">
+                <!-- 空歌單提示 -->
+                <div id="empty-playlist" class="h-full flex flex-col items-center justify-center text-gray-500 text-sm p-6 text-center">
+                    <span class="text-3xl mb-2">📂</span>
+                    <p>歌單是空的</p>
+                    <p class="mt-1">請點擊右上方「點歌」加入您從 KTV Maker 製作的伴唱帶</p>
+                </div>
+                <!-- 歌曲清單項目將透過 JS 動態產生在這裡 -->
+                <ul id="playlist-ul" class="space-y-2"></ul>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // ==========================================
+        // 核心變數與 DOM 元素
+        // ==========================================
+        const videoContainer = document.getElementById('video-container');
+        const btnFullscreen = document.getElementById('btn-fullscreen');
+        const videoEl = document.getElementById('main-video');
+        const standbyScreen = document.getElementById('standby-screen');
+        const btnStartSystem = document.getElementById('btn-start-system');
+        const startupOverlay = document.getElementById('startup-overlay');
+        
+        // 控制面板 DOM
+        const timeCurrent = document.getElementById('time-current');
+        const timeTotal = document.getElementById('time-total');
+        const progressBar = document.getElementById('progress-bar');
+        const btnPlayPause = document.getElementById('btn-play-pause');
+        const iconPlay = document.getElementById('icon-play');
+        const iconPause = document.getElementById('icon-pause');
+        const btnNext = document.getElementById('btn-next');
+        const btnVocalToggle = document.getElementById('btn-vocal-toggle');
+        const pitchDisplay = document.getElementById('pitch-display');
+        const pitchBtns = document.querySelectorAll('.pitch-btn');
+        
+        // 歌單 DOM
+        const fileInput = document.getElementById('file-input');
+        const playlistUl = document.getElementById('playlist-ul');
+        const emptyPlaylist = document.getElementById('empty-playlist');
+        const queueCount = document.getElementById('queue-count');
+
+        // 音訊引擎變數
+        let isEngineReady = false;
+        let pitchShiftNode = null;
+        let mediaSource = null;
+        let currentPitch = 0;
+        
+        // 🎯 聲道分離器與音量控制節點
+        let channelSplitter = null;
+        let leftGain = null;  // 左聲道 (純伴奏) 開關
+        let rightGain = null; // 右聲道 (導唱原音) 開關
+        let isVocalGuideOn = false; // 記錄目前模式 (預設伴唱 false)
+        
+        let playlist = []; // 存放歌曲物件
+        let currentPlayingId = null;
+
+        // ==========================================
+        // 系統初始化 (音訊引擎與路由魔法)
+        // ==========================================
+        btnStartSystem.addEventListener('click', async () => {
+            try {
+                await Tone.start();
+                
+                const audioContext = Tone.context.rawContext;
+                mediaSource = audioContext.createMediaElementSource(videoEl);
+                
+                // 1. 建立聲道分離器 (Splitter) 與開關 (Gain)
+                channelSplitter = new Tone.Split(2); // 將立體聲拆成 左0 右1
+                leftGain = new Tone.Gain(1);  // 預設伴唱開啟 (音量1)
+                rightGain = new Tone.Gain(0); // 預設導唱關閉 (音量0)
+                
+                // 2. 接線路徑：影片 -> 分離器 -> 左右開關
+                Tone.connect(mediaSource, channelSplitter);
+                channelSplitter.connect(leftGain, 0, 0);  // 左聲道送入 leftGain
+                channelSplitter.connect(rightGain, 1, 0); // 右聲道送入 rightGain
+                
+                // 3. 建立變調器 (PitchShift)
+                pitchShiftNode = new Tone.PitchShift({ pitch: 0, windowSize: 0.1 }).toDestination();
+                
+                // 4. 將左右開關都送到變調器 (變調器會將單聲道訊號同時送到使用者的左右耳！)
+                leftGain.connect(pitchShiftNode);
+                rightGain.connect(pitchShiftNode);
+
+                isEngineReady = true;
+                startupOverlay.style.opacity = '0';
+                setTimeout(() => startupOverlay.remove(), 500);
+                
+                setInterval(() => {
+                    const now = new Date();
+                    document.getElementById('clock').innerText = now.toLocaleTimeString('zh-TW', {hour12: false});
+                }, 1000);
+
+            } catch (err) {
+                console.error(err);
+                alert("音訊引擎啟動失敗，請確認瀏覽器支援。");
+            }
+        });
+
+        // ==========================================
+        // 🎯 導唱 / 伴唱 切換邏輯
+        // ==========================================
+        function setVocalMode(isGuide) {
+            isVocalGuideOn = isGuide;
+            if (isGuide) {
+                // 導唱模式：開右關左 (rampTo 可以讓切換有極短的淡入淡出，防止爆音)
+                leftGain.gain.rampTo(0, 0.1);
+                rightGain.gain.rampTo(1, 0.1);
+                btnVocalToggle.innerHTML = "🧑‍🎤 導唱模式";
+                btnVocalToggle.className = "px-5 py-3 rounded-full border border-ktv-secondary bg-ktv-secondary/20 text-ktv-secondary hover:bg-ktv-secondary hover:text-white font-bold transition-all";
+            } else {
+                // 伴唱模式：開左關右
+                leftGain.gain.rampTo(1, 0.1);
+                rightGain.gain.rampTo(0, 0.1);
+                btnVocalToggle.innerHTML = "🎤 伴唱模式";
+                btnVocalToggle.className = "px-5 py-3 rounded-full border border-ktv-primary text-ktv-primary hover:bg-ktv-primary hover:text-white font-bold transition-all";
+            }
+        }
+
+        btnVocalToggle.addEventListener('click', () => {
+            setVocalMode(!isVocalGuideOn);
+        });
+
+        // ==========================================
+        // 歌單系統與播放控制邏輯
+        // ==========================================
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length === 0) return;
+
+            files.forEach(file => {
+                const song = {
+                    id: Date.now() + Math.random().toString(36).substr(2, 9),
+                    file: file,
+                    url: URL.createObjectURL(file),
+                    name: file.name.replace(/\.[^/.]+$/, "")
+                };
+                playlist.push(song);
+            });
+            fileInput.value = ''; 
+            renderPlaylist();
+
+            if (!currentPlayingId && playlist.length > 0) playSong(playlist[0].id);
+        });
+
+        function renderPlaylist() {
+            playlistUl.innerHTML = '';
+            queueCount.innerText = playlist.length;
+            
+            if (playlist.length === 0) {
+                emptyPlaylist.classList.remove('hidden');
+                return;
+            } else {
+                emptyPlaylist.classList.add('hidden');
+            }
+
+            playlist.forEach((song, index) => {
+                const isPlaying = song.id === currentPlayingId;
+                const li = document.createElement('li');
+                li.className = `group flex items-center justify-between p-3 rounded-xl border ${isPlaying ? 'bg-ktv-primary/20 border-ktv-primary text-white shadow-[0_0_10px_rgba(176,38,255,0.2)]' : 'bg-white/5 border-transparent text-gray-300 hover:bg-white/10'} transition-colors cursor-pointer`;
+                
+                li.innerHTML = `
+                    <div class="flex-1 flex items-center gap-3 overflow-hidden" onclick="playSong('${song.id}')">
+                        <div class="w-6 text-center font-mono text-sm ${isPlaying ? 'text-ktv-secondary animate-pulse' : 'text-gray-500'}">
+                            ${isPlaying ? '▶' : index + 1}
+                        </div>
+                        <div class="truncate font-medium text-sm pr-2">
+                            ${song.name}
+                        </div>
+                    </div>
+                    <!-- 新增：操作按鈕區塊 (滑鼠移入時顯示) -->
+                    <div class="flex items-center opacity-0 group-hover:opacity-100 transition-all focus-within:opacity-100">
+                        ${!isPlaying ? `<button class="insert-btn p-2 text-gray-400 hover:text-ktv-secondary hover:scale-110 transition-all" data-id="${song.id}" title="優先插播">⬆️</button>` : ''}
+                        <button class="delete-btn p-2 text-gray-400 hover:text-red-400 hover:scale-110 transition-all" data-id="${song.id}" title="刪除">✕</button>
+                    </div>
+                `;
+                playlistUl.appendChild(li);
+            });
+
+            // 綁定「刪除」事件
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    removeSong(e.target.getAttribute('data-id'));
+                });
+            });
+
+            // 綁定「插播」事件
+            document.querySelectorAll('.insert-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    insertNext(e.target.getAttribute('data-id'));
+                });
+            });
+        }
+
+        // 🎯 新增：插播功能邏輯
+        function insertNext(id) {
+            const songIndex = playlist.findIndex(s => s.id === id);
+            // 防呆：找不到歌，或者是目前正在播的歌，就不處理
+            if (songIndex === -1 || playlist[songIndex].id === currentPlayingId) return;
+
+            // 1. 從原本的位置把這首歌抽出來
+            const [song] = playlist.splice(songIndex, 1);
+
+            // 2. 尋找「目前正在播放」的歌曲位置
+            const currentIndex = playlist.findIndex(s => s.id === currentPlayingId);
+
+            if (currentIndex !== -1) {
+                // 如果有歌在播，就把插播的歌塞在它「正下方」 (currentIndex + 1)
+                playlist.splice(currentIndex + 1, 0, song);
+            } else {
+                // 如果目前沒歌在播，就放在清單最前面，然後直接開始唱！
+                playlist.unshift(song);
+                playSong(song.id);
+            }
+            
+            // 重新渲染畫面
+            renderPlaylist();
+        }
+
+        function playSong(id) {
+            const songIndex = playlist.findIndex(s => s.id === id);
+            if (songIndex === -1) return;
+            
+            const song = playlist[songIndex];
+            currentPlayingId = song.id;
+            
+            videoEl.src = song.url;
+            standbyScreen.classList.add('hidden');
+            videoEl.classList.remove('hidden');
+            
+            // 每次播新歌時：重置原調、並預設為「伴唱模式」
+            updatePitch(0);
+            setVocalMode(false); 
+            
+            videoEl.play();
+            updatePlayPauseUI(true);
+            
+            // 解鎖控制按鈕
+            btnPlayPause.disabled = false;
+            btnNext.disabled = false;
+            btnVocalToggle.disabled = false;
+            
+            renderPlaylist(); 
+        }
+
+        function removeSong(id) {
+            const songIndex = playlist.findIndex(s => s.id === id);
+            if (songIndex === -1) return;
+            
+            URL.revokeObjectURL(playlist[songIndex].url);
+            playlist.splice(songIndex, 1);
+            
+            if (id === currentPlayingId) playNext();
+            else renderPlaylist();
+        }
+
+        function playNext() {
+            if (playlist.length === 0) return resetPlayer();
+            
+            const currentIndex = playlist.findIndex(s => s.id === currentPlayingId);
+            if (currentIndex !== -1) {
+                URL.revokeObjectURL(playlist[currentIndex].url);
+                playlist.splice(currentIndex, 1);
+            }
+            
+            if (playlist.length > 0) playSong(playlist[0].id);
+            else resetPlayer();
+        }
+
+        function resetPlayer() {
+            currentPlayingId = null;
+            videoEl.pause();
+            videoEl.src = "";
+            videoEl.classList.add('hidden');
+            standbyScreen.classList.remove('hidden');
+            
+            btnPlayPause.disabled = true;
+            btnNext.disabled = true;
+            btnVocalToggle.disabled = true;
+            updatePlayPauseUI(false);
+            updatePitch(0);
+            renderPlaylist();
+        }
+
+        // ==========================================
+        // 播放按鈕與升降 Key 互動邏輯
+        // ==========================================
+        videoEl.addEventListener('ended', playNext);
+        btnNext.addEventListener('click', playNext);
+        btnPlayPause.addEventListener('click', () => {
+            if (videoEl.paused) {
+                videoEl.play();
+                updatePlayPauseUI(true);
+            } else {
+                videoEl.pause();
+                updatePlayPauseUI(false);
+            }
+        });
+
+        function updatePlayPauseUI(isPlaying) {
+            if (isPlaying) {
+                iconPlay.classList.add('hidden');
+                iconPause.classList.remove('hidden');
+            } else {
+                iconPlay.classList.remove('hidden');
+                iconPause.classList.add('hidden');
+            }
+        }
+
+        function updatePitch(val) {
+            currentPitch = val;
+            if (pitchShiftNode) pitchShiftNode.pitch = currentPitch;
+            
+            if (currentPitch > 0) {
+                pitchDisplay.innerText = `+${currentPitch}`;
+                pitchDisplay.className = "text-2xl font-mono font-bold text-red-400";
+            } else if (currentPitch < 0) {
+                pitchDisplay.innerText = currentPitch;
+                pitchDisplay.className = "text-2xl font-mono font-bold text-blue-400";
+            } else {
+                pitchDisplay.innerText = "原調";
+                pitchDisplay.className = "text-2xl font-mono font-bold text-green-400";
+            }
+        }
+
+        pitchBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const action = e.target.getAttribute('data-pitch');
+                if (action === 'up' && currentPitch < 12) updatePitch(currentPitch + 1);
+                else if (action === 'down' && currentPitch > -12) updatePitch(currentPitch - 1);
+                else if (action !== 'up' && action !== 'down') updatePitch(parseInt(action));
+            });
+        });
+
+        // ==========================================
+        // 🎯 實用功能：進度條、全螢幕與快捷鍵
+        // ==========================================
+        
+        // 1. 進度條與時間顯示邏輯
+        function formatTime(seconds) {
+            if (isNaN(seconds) || !isFinite(seconds)) return "00:00";
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        // 當影片載入完成，取得總長度
+        videoEl.addEventListener('loadedmetadata', () => {
+            timeTotal.innerText = formatTime(videoEl.duration);
+        });
+
+        // 影片播放時，同步更新進度條與當前時間
+        videoEl.addEventListener('timeupdate', () => {
+            if (videoEl.duration) {
+                const percent = (videoEl.currentTime / videoEl.duration) * 100;
+                progressBar.value = percent;
+                timeCurrent.innerText = formatTime(videoEl.currentTime);
+            }
+        });
+
+        // 使用者拖曳進度條快轉
+        progressBar.addEventListener('input', (e) => {
+            if (videoEl.duration) {
+                videoEl.currentTime = (e.target.value / 100) * videoEl.duration;
+            }
+        });
+
+        // 2. 全螢幕邏輯 (將整個黑底影片區塊放大，更有包廂感)
+        btnFullscreen.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                videoContainer.requestFullscreen().catch(err => {
+                    alert('您的瀏覽器目前不支援全螢幕功能');
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+
+        // 3. 鍵盤快捷鍵 (遙控器模式)
+        window.addEventListener('keydown', (e) => {
+            // 若系統未啟動或沒在播歌，則不作用
+            if (!isEngineReady || currentPlayingId === null) return;
+            
+            // 攔截特定按鍵，避免按空白鍵或上下鍵時，整個網頁跟著捲動
+            if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) {
+                e.preventDefault();
+            }
+
+            switch(e.code) {
+                case 'Space': 
+                    btnPlayPause.click(); 
+                    break;
+                case 'KeyN': 
+                    btnNext.click(); 
+                    break;
+                case 'KeyV': 
+                    btnVocalToggle.click(); 
+                    break;
+                case 'KeyF': 
+                    btnFullscreen.click(); 
+                    break;
+                case 'ArrowUp': 
+                    if (currentPitch < 12) updatePitch(currentPitch + 1);
+                    break;
+                case 'ArrowDown': 
+                    if (currentPitch > -12) updatePitch(currentPitch - 1);
+                    break;
+            }
+        });
+
+    </script>
+</body>
+</html>
