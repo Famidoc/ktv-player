@@ -32,68 +32,74 @@
     </div>
 
     <script>
-        // 🚨 請填入您剛剛取得的兩個關鍵網址與金鑰！
-        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZqHCbM2W2FaCb7s0XCikYHE7S73o-OYzNeps67wGbpleni3vv1ILjtEWIOF7Oo3y9Xw/exec';
-        const GOOGLE_API_KEY = 'AIzaSyCFwZ6k1QdZ8J8Pw_tI-I1TnoMhnOGJbPs';
+				// 💡 1. 請再次確認這裡的 URL 與您最新部署的 exec 網址一字不差
+				const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZqHCbM2W2FaCb7s0XCikYHE7S73o-OYzNeps67wGbpleni3vv1ILjtEWIOF7Oo3y9Xw/exec';
+				const GOOGLE_API_KEY = 'AIzaSyCFwZ6k1QdZ8J8Pw_tI-I1TnoMhnOGJbPs'; // 請填入您的 API Key
 
-        let allSongs = [];
+				let allSongs = [];
 
-        // 步驟 1：向 GAS 索取歌單
-        async function fetchSongList() {
-            try {
-                const response = await fetch(GAS_WEB_APP_URL);
-                allSongs = await response.json();
-                renderSongList(allSongs);
-            } catch (error) {
-                document.getElementById('loading-text').innerText = '載入失敗，請檢查網路或設定。';
-                console.error('Fetch error:', error);
-            }
-        }
+				// 💡 2. 使用 window.onload 確保 HTML 標籤都長出來了才執行
+				window.onload = function() {
+						console.log("網頁載入完成，開始抓取歌單...");
+						fetchSongList();
 
-        // 步驟 2：渲染歌單按鈕
-        function renderSongList(songs) {
-            const container = document.getElementById('song-list-container');
-            container.innerHTML = ''; // 清空載入中文字
+						// 綁定搜尋功能
+						const searchBar = document.getElementById('search-bar');
+						if(searchBar) {
+								searchBar.addEventListener('input', (e) => {
+										const keyword = e.target.value.toLowerCase();
+										const filteredSongs = allSongs.filter(song => song.name.toLowerCase().includes(keyword));
+										renderSongList(filteredSongs);
+								});
+						}
+				};
 
-            if(songs.length === 0) {
-                container.innerHTML = '<p class="text-gray-400 text-center mt-10">找不到歌曲</p>';
-                return;
-            }
+				async function fetchSongList() {
+						const loadingEl = document.getElementById('loading-text');
+						try {
+								// 💡 3. 加入 {redirect: 'follow'} 確保處理 Google 的轉址
+								const response = await fetch(GAS_WEB_APP_URL, { redirect: 'follow' });
+								
+								if (!response.ok) throw new Error('連線失敗: ' + response.status);
+								
+								allSongs = await response.json();
+								renderSongList(allSongs);
+								
+								if(loadingEl) loadingEl.style.display = 'none'; // 載入成功就隱藏文字
+						} catch (error) {
+								console.error('詳細錯誤訊息:', error);
+								if(loadingEl) loadingEl.innerText = '載入失敗，原因：' + error.message;
+						}
+				}
 
-            songs.forEach(song => {
-                const btn = document.createElement('button');
-                btn.className = 'w-full text-left p-3 bg-gray-700 hover:bg-pink-600 rounded transition-colors truncate';
-                btn.innerText = song.name;
-                
-                // 點歌核心邏輯！
-                btn.onclick = () => playSong(song.id, song.name);
-                
-                container.appendChild(btn);
-            });
-        }
+				function renderSongList(songs) {
+						const container = document.getElementById('song-list-container');
+						if(!container) return;
+						
+						container.innerHTML = ''; 
+						if(songs.length === 0) {
+								container.innerHTML = '<p class="text-gray-400 text-center mt-10">資料夾內尚無檔案</p>';
+								return;
+						}
 
-        // 步驟 3：播放指定歌曲 (利用 API Key 突破 CORS)
-        function playSong(fileId, songName) {
-            const player = document.getElementById('ktv-player');
-            const nowPlaying = document.getElementById('now-playing');
-            
-            // 🔥 組合出可以跨網域串流的終極直連網址
-            const streamUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
-            
-            player.src = streamUrl;
-            nowPlaying.innerText = songName;
-            player.play();
-        }
+						songs.forEach(song => {
+								const btn = document.createElement('button');
+								btn.className = 'w-full text-left p-3 bg-gray-700 hover:bg-pink-600 rounded mb-2 transition-colors truncate';
+								btn.innerText = song.name;
+								btn.onclick = () => playSong(song.id, song.name);
+								container.appendChild(btn);
+						});
+				}
 
-        // 步驟 4：實作搜尋功能
-        document.getElementById('search-bar').addEventListener('input', (e) => {
-            const keyword = e.target.value.toLowerCase();
-            const filteredSongs = allSongs.filter(song => song.name.toLowerCase().includes(keyword));
-            renderSongList(filteredSongs);
-        });
-
-        // 網頁載入時立刻抓取歌單
-        fetchSongList();
-    </script>
+				function playSong(fileId, songName) {
+						const player = document.getElementById('ktv-player');
+						const nowPlaying = document.getElementById('now-playing');
+						const streamUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${GOOGLE_API_KEY}`;
+						
+						player.src = streamUrl;
+						if(nowPlaying) nowPlaying.innerText = songName;
+						player.play();
+				}
+		</script>
 </body>
 </html>
