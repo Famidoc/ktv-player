@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KTV VIP 雲端包廂 | KTV Maker Pro</title>
-		<link rel="manifest" href="manifest-vip.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script>
@@ -19,6 +18,7 @@
     <style>
         .neon-text { text-shadow: 0 0 10px rgba(0, 208, 255, 0.7); }
         .neon-box { box-shadow: 0 0 15px rgba(176, 38, 255, 0.3); }
+        .modal-overlay { background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #1a1a24; }
         ::-webkit-scrollbar-thumb { background: #4a4a5a; border-radius: 4px; }
@@ -27,7 +27,7 @@
 </head>
 <body class="bg-ktv-dark text-white h-screen flex flex-col overflow-hidden font-sans selection:bg-ktv-danger selection:text-white">
 
-    <div id="startup-overlay" class="fixed inset-0 z-50 bg-black/90 flex flex-col items-center justify-center transition-opacity duration-500">
+    <div id="startup-overlay" class="fixed inset-0 z-50 bg-black/95 flex flex-col items-center justify-center transition-opacity duration-500">
         <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-ktv-primary to-ktv-secondary mb-8 neon-text">🎤 KTV 專屬伴唱機</h1>
         <p class="text-gray-400 mb-8 text-lg">系統就緒，請點擊下方按鈕啟動音訊引擎</p>
         <button id="btn-start-system" class="px-10 py-4 bg-gradient-to-r from-ktv-primary to-ktv-danger rounded-full text-xl font-bold hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,20,147,0.6)] animate-pulse">
@@ -35,9 +35,54 @@
         </button>
     </div>
 
+    <div id="modal-shortcuts" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-overlay" onclick="closeModal('modal-shortcuts')"></div>
+        <div class="relative bg-ktv-panel border border-ktv-primary/50 w-full max-w-md rounded-3xl p-8 neon-box">
+            <h3 class="text-2xl font-bold text-ktv-secondary mb-6 flex items-center gap-2">⌨️ 快捷鍵指南</h3>
+            <ul class="space-y-4 text-lg">
+                <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-gray-400">播放 / 暫停</span><span class="text-white font-mono bg-white/10 px-2 rounded">[空白鍵]</span></li>
+                <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-gray-400">切換下一首</span><span class="text-white font-mono bg-white/10 px-2 rounded">[ N ]</span></li>
+                <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-gray-400">導唱 / 伴唱切換</span><span class="text-white font-mono bg-white/10 px-2 rounded">[ V ]</span></li>
+                <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-gray-400">全螢幕切換</span><span class="text-white font-mono bg-white/10 px-2 rounded">[ F ]</span></li>
+                <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-gray-400">升高音調</span><span class="text-white font-mono bg-white/10 px-2 rounded">[ ↑ ]</span></li>
+                <li class="flex justify-between pb-2"><span class="text-gray-400">降低音調</span><span class="text-white font-mono bg-white/10 px-2 rounded">[ ↓ ]</span></li>
+            </ul>
+            <button onclick="closeModal('modal-shortcuts')" class="mt-8 w-full py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors">我知道了</button>
+        </div>
+    </div>
+
+    <div id="modal-help" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+        <div class="absolute inset-0 modal-overlay" onclick="closeModal('modal-help')"></div>
+        <div class="relative bg-ktv-panel border border-ktv-danger/50 w-full max-w-2xl rounded-3xl p-6 md:p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-ktv-primary to-ktv-danger mb-6">🍽️ 自助點菜指南 (加歌教學)</h3>
+            <div class="space-y-6 text-gray-200 leading-relaxed">
+                <div class="flex gap-4">
+                    <span class="flex-shrink-0 w-8 h-8 bg-ktv-primary rounded-full flex items-center justify-center font-bold">1</span>
+                    <p>提供你的 <span class="text-ktv-secondary">Gmail</span> 給廠長，獲取雲端硬碟共享資料夾 <span class="bg-white/10 px-2 rounded">[MVs]</span> 的編輯權限。</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="flex-shrink-0 w-8 h-8 bg-ktv-primary rounded-full flex items-center justify-center font-bold">2</span>
+                    <p>在 YouTube 尋找歌曲，建議選有清楚動態字幕的版本（如 KTV 版），但<span class="text-yellow-400">必須有人聲</span>，不能是純伴奏。找到後複製網址。</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="flex-shrink-0 w-8 h-8 bg-ktv-primary rounded-full flex items-center justify-center font-bold">3</span>
+                    <p>點擊 <span class="text-ktv-danger font-bold">[+自助加歌]</span> 開啟轉檔工具，貼上網址，將格式改選為 <span class="bg-gray-700 px-1 rounded text-sm">MP4</span> 並按下 <span class="bg-blue-600 px-1 rounded text-sm">Convert</span>，完成後下載存入共享的 <span class="bg-white/10 px-2 rounded">[MVs]</span> 資料夾。</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="flex-shrink-0 w-8 h-8 bg-ktv-primary rounded-full flex items-center justify-center font-bold">4</span>
+                    <p>當新歌傳入後，系統機器人 <span class="text-ktv-secondary">KTV Agent</span> 會自動偵測並進行「左伴右唱」去人聲處理，轉檔完成後會自動寫入歌庫。</p>
+                </div>
+                <div class="flex gap-4 border-l-4 border-ktv-danger pl-4 py-2 bg-white/5">
+                    <p class="text-sm"><span class="font-bold text-ktv-danger">⏳ 貼心提醒：</span> 機器人長駐於廠長電腦中，僅在<span class="text-white underline">開機狀態</span>下運作。只要電腦開著，約 10 分鐘內即可開唱；若電腦關機，則會在下次開機時自動完成。</p>
+                </div>
+            </div>
+            <button onclick="closeModal('modal-help')" class="mt-8 w-full py-4 bg-gradient-to-r from-ktv-primary to-ktv-danger rounded-xl font-bold hover:opacity-90 transition-opacity">開始我的自助點歌</button>
+        </div>
+    </div>
+
     <header class="h-14 md:h-16 border-b border-white/10 flex items-center justify-between px-6 bg-ktv-panel flex-shrink-0">
         <div class="flex items-center gap-3">
-            <span class="text-2xl">🎵</span>
+            <span class="text-2xl">💎</span>
             <h1 class="text-lg md:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-ktv-secondary to-ktv-primary">KTV 雲端伴唱系統 (VIP)</h1>
         </div>
         <div class="text-sm font-mono text-ktv-secondary" id="clock">00:00:00</div>
@@ -48,17 +93,22 @@
         <section class="flex-none lg:flex-1 flex flex-col min-w-0 min-h-0">
             <div id="video-container" class="relative w-full aspect-video lg:aspect-auto lg:flex-1 bg-black rounded-2xl overflow-hidden neon-box shadow-2xl flex items-center justify-center border border-white/5 min-h-0 group">
                 <video id="main-video" class="w-full h-full object-contain hidden" crossorigin="anonymous" playsinline></video>
-                <div id="standby-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-                    <div class="text-6xl mb-4 opacity-50">🎬</div>
-                    <h2 class="text-2xl font-bold text-gray-500 text-center px-4">請由右側雲端歌庫點歌</h2>
+                <div id="standby-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-gray-900 to-black text-center p-6">
+                    <div class="text-6xl mb-4 animate-bounce">🎙️</div>
+                    <h2 class="text-2xl font-bold text-gray-500 mb-2">專屬包廂已就緒</h2>
+                    <p class="text-gray-600 text-sm">請由右側歌庫選擇曲目</p>
                 </div>
-                <button id="btn-fullscreen" class="absolute top-4 right-4 p-3 bg-black/50 hover:bg-black/80 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10" title="全螢幕 (F)">
+                <button id="btn-fullscreen" class="absolute top-4 right-4 p-3 bg-black/50 hover:bg-black/80 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                 </button>
             </div>
 
-            <div class="mt-4 flex-shrink-0 bg-ktv-panel rounded-2xl p-4 md:p-6 border border-white/10 flex flex-col justify-center relative">
-                <div class="flex items-center gap-3 mb-4 text-xs font-mono text-gray-400">
+            <div class="mt-4 flex-shrink-0 bg-ktv-panel rounded-2xl p-4 md:p-6 border border-white/10 relative">
+                <button onclick="openModal('modal-shortcuts')" class="absolute top-4 right-4 text-gray-500 hover:text-ktv-secondary flex items-center gap-1 text-xs transition-colors">
+                    <span>快捷鍵說明</span> <span class="bg-gray-700 w-5 h-5 rounded flex items-center justify-center">?</span>
+                </button>
+
+                <div class="flex items-center gap-3 mb-4 text-xs font-mono text-gray-400 mt-2">
                     <span id="time-current">00:00</span>
                     <input type="range" id="progress-bar" min="0" max="100" value="0" class="flex-1 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-purple-500">
                     <span id="time-total">00:00</span>
@@ -66,32 +116,25 @@
 
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-6">
                     <div class="flex items-center gap-3 md:gap-4 flex-wrap justify-center">
-                        <button id="btn-play-pause" class="w-12 h-12 md:w-16 md:h-16 rounded-full bg-ktv-primary flex items-center justify-center hover:bg-ktv-danger transition-colors disabled:opacity-50" title="播放/暫停 (空白鍵)" disabled>
+                        <button id="btn-play-pause" class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-ktv-primary flex items-center justify-center hover:bg-ktv-danger transition-all hover:scale-105" disabled>
                             <svg id="icon-play" class="w-6 h-6 md:w-8 md:h-8 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                             <svg id="icon-pause" class="w-6 h-6 md:w-8 md:h-8 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                         </button>
-                        <button id="btn-next" class="px-4 py-2 md:px-5 md:py-3 rounded-full border border-white/20 hover:bg-white/10 font-bold transition-colors disabled:opacity-50 text-sm md:text-base" title="切換下一首 (N)" disabled>
-                            ⏭️ 切歌
-                        </button>
-                        <button id="btn-vocal-toggle" class="px-4 py-2 md:px-5 md:py-3 rounded-full border border-ktv-primary text-ktv-primary hover:bg-ktv-primary hover:text-white font-bold transition-all disabled:opacity-50 text-sm md:text-base" title="切換伴唱/導唱 (V)" disabled>
-                            🎤 伴唱模式
-                        </button>
+                        <button id="btn-next" class="px-5 py-3 rounded-full border border-white/20 hover:bg-white/10 font-bold transition-colors disabled:opacity-50" disabled>⏭️ 切歌</button>
+                        <button id="btn-vocal-toggle" class="px-5 py-3 rounded-full border border-ktv-primary text-ktv-primary hover:bg-ktv-primary hover:text-white font-bold transition-all disabled:opacity-50" disabled>🎤 伴唱模式</button>
                     </div>
 
-                    <div class="flex-1 max-w-lg w-full bg-black/30 p-3 md:p-4 rounded-xl border border-white/5 relative">
-                        <div class="absolute -top-3 left-4 bg-ktv-panel px-3 py-0.5 text-[10px] text-gray-500 border border-white/10 rounded-full hidden lg:block">
-                            快捷鍵：[空白] 播放/暫停 | [N] 切歌 | [V] 導/伴唱 | [↑][↓] 升降Key
+                    <div class="flex-1 max-w-lg w-full bg-black/30 p-4 rounded-xl border border-white/5">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-sm text-gray-400 font-bold">音高控制 (Pitch)</span>
+                            <span id="pitch-display" class="text-2xl font-mono font-bold text-green-400">原調</span>
                         </div>
-                        <div class="flex items-center justify-between mb-2 md:mb-3">
-                            <span class="text-xs md:text-sm text-gray-400 font-bold">音高控制 (Pitch)</span>
-                            <span id="pitch-display" class="text-xl md:text-2xl font-mono font-bold text-green-400">原調</span>
-                        </div>
-                        <div class="grid grid-cols-5 gap-1 md:gap-2 mb-1">
-                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-1 md:py-2 text-xs md:text-sm font-bold text-blue-300 transition-colors" data-pitch="-4" title="男唱女歌">降 4</button>
-                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-1 md:py-2 text-xs md:text-sm font-bold text-gray-300 transition-colors" data-pitch="down">降 b</button>
-                            <button class="pitch-btn bg-white/10 hover:bg-white/20 rounded py-1 md:py-2 text-xs md:text-sm font-bold text-white transition-colors" data-pitch="0">原調</button>
-                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-1 md:py-2 text-xs md:text-sm font-bold text-gray-300 transition-colors" data-pitch="up">升 #</button>
-                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-1 md:py-2 text-xs md:text-sm font-bold text-red-300 transition-colors" data-pitch="4" title="女唱男歌">升 4</button>
+                        <div class="grid grid-cols-5 gap-2">
+                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-2 text-sm font-bold text-blue-300" data-pitch="-4">降 4</button>
+                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-2 text-sm font-bold text-gray-300" data-pitch="down">降 b</button>
+                            <button class="pitch-btn bg-white/10 hover:bg-white/20 rounded py-2 text-sm font-bold" data-pitch="0">原調</button>
+                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-2 text-sm font-bold text-gray-300" data-pitch="up">升 #</button>
+                            <button class="pitch-btn bg-gray-800 hover:bg-gray-700 rounded py-2 text-sm font-bold text-red-300" data-pitch="4">升 4</button>
                         </div>
                     </div>
                 </div>
@@ -99,376 +142,240 @@
         </section>
 
         <section class="w-full lg:w-96 flex flex-col gap-4 min-h-0">
-            
-            <div class="bg-ktv-panel rounded-2xl border border-white/10 flex flex-col h-[350px] lg:h-1/2 lg:min-h-[250px]">
+            <div class="bg-ktv-panel rounded-2xl border border-white/10 flex flex-col h-[400px] lg:h-1/2 lg:min-h-[250px]">
                 <div class="p-4 border-b border-white/10">
-										<div class="flex items-center justify-between mb-3">
-												<h2 class="text-lg font-bold flex items-center gap-2">
-														☁️ 雲端歌庫
-												</h2>
-												<div class="flex items-center gap-3">
-														<span id="loading-text" class="text-xs text-ktv-secondary font-normal animate-pulse">連線中...</span>
-														
-														<a href="https://ytmp3.as/AOPR/" target="_blank" rel="noopener noreferrer" 
-															 class="px-3 py-1.5 bg-gradient-to-r from-ktv-primary to-ktv-danger hover:from-pink-500 hover:to-orange-400 text-white text-xs font-bold rounded-full shadow-[0_0_10px_rgba(255,20,147,0.4)] transition-all hover:scale-105 flex items-center gap-1">
-																➕ 自助加歌
-														</a>
-												</div>
-										</div>
-										
-										<input type="text" id="search-bar" placeholder="輸入歌名搜尋..." class="w-full p-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:border-ktv-secondary transition-colors mb-2">
-										
-										<p class="text-[10px] text-gray-400">💡 提示：使用自助加歌上傳 MP4 後，在我的主機開機的情況下，系統約需 5-10 分鐘進行去人聲處理，請稍候再重新整理網頁。</p>
-								</div>
-                <div class="flex-1 overflow-y-auto p-2" id="search-results">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-lg font-bold flex items-center gap-2">☁️ 雲端歌庫</h2>
+                        <div class="flex items-center gap-2">
+                            <span id="loading-text" class="text-xs text-ktv-secondary animate-pulse">連線中...</span>
+                            <a href="https://yt2mp3.app" target="_blank" class="px-3 py-1.5 bg-gradient-to-r from-ktv-primary to-ktv-danger text-white text-[10px] font-bold rounded-full hover:scale-105 transition-transform flex items-center gap-1 shadow-lg">
+                                ➕ 自助加歌
+                            </a>
+                            <button onclick="openModal('modal-help')" class="w-6 h-6 rounded-full border border-gray-600 text-gray-400 hover:text-white text-xs">?</button>
+                        </div>
                     </div>
+                    <input type="text" id="search-bar" placeholder="輸入歌名搜尋..." class="w-full p-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:border-ktv-secondary">
+                </div>
+                <div class="flex-1 overflow-y-auto p-2" id="search-results"></div>
             </div>
 
-            <div class="bg-ktv-panel rounded-2xl border border-white/10 flex flex-col h-[350px] lg:h-1/2 lg:min-h-[250px]">
-                <div class="p-4 border-b border-white/10 flex items-center justify-between">
-                    <h2 class="text-lg font-bold flex items-center gap-2">
-                        <span>📋</span> 待播歌單 (<span id="queue-count">0</span>)
-                    </h2>
+            <div class="bg-ktv-panel rounded-2xl border border-white/10 flex flex-col h-[400px] lg:h-1/2 lg:min-h-[250px]">
+                <div class="p-4 border-b border-white/10">
+                    <h2 class="text-lg font-bold">📋 待播歌單 (<span id="queue-count">0</span>)</h2>
                 </div>
                 <div class="flex-1 overflow-y-auto p-2" id="playlist-container">
-                    <div id="empty-playlist" class="h-full flex flex-col items-center justify-center text-gray-500 text-sm p-6 text-center">
-                        <span class="text-3xl mb-2">🎤</span>
-                        <p>目前沒有待播歌曲</p>
-                        <p class="mt-1">請點擊上方歌庫加入歌單</p>
+                    <div id="empty-playlist" class="h-full flex flex-col items-center justify-center text-gray-600 text-sm">
+                        <span class="text-4xl mb-2 opacity-20">🎤</span>
+                        <p>請點擊上方歌庫點歌</p>
                     </div>
                     <ul id="playlist-ul" class="space-y-2"></ul>
                 </div>
             </div>
-
         </section>
     </main>
 
-    <footer class="h-12 border-t border-white/5 bg-ktv-dark flex-shrink-0 flex items-center justify-between px-4 md:px-8 text-xs text-gray-500">
-        <div>@2026 by <span class="text-gray-400 font-semibold">Famidoc Chang</span> & Gemini 3.1 pro</div>
+    <footer class="h-24 md:h-20 border-t border-white/5 bg-ktv-dark flex-shrink-0 flex items-center justify-between px-6">
+        <div class="flex items-center gap-4">
+            <div class="bg-white p-1 rounded-lg">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=https://famidoc.github.io/ktv-player/vip.html" alt="VIP QR" class="w-12 h-12 md:w-14 md:h-14">
+            </div>
+            <div>
+                <div class="text-xs text-ktv-secondary font-bold">VIP 專屬連結</div>
+                <div class="text-[10px] text-gray-500 font-mono">famidoc.github.io/ktv-player/vip.html</div>
+            </div>
+        </div>
+        <div class="text-right">
+            <div class="text-[10px] text-gray-500">@2026 by Famidoc Chang & Gemini 3.1 Pro</div>
+            <div class="text-[9px] text-gray-700">Powered by KTV Agent Automation</div>
+        </div>
     </footer>
 
     <script>
-        // 🚨 請確認填入您的 API 與金鑰
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzRXbdzRcU01ccyb30Df1xOvxloroLAM40KzEVf1u_-Mo2zWpxkGDvVenNK74YsUGjcJw/exec';
         const GOOGLE_API_KEY = 'AIzaSyCWQrdC6i79MsLaYeks5HC6YviF2xKxl4I';
 
-        // 介面元素綁定
-        const videoContainer = document.getElementById('video-container');
-        const btnFullscreen = document.getElementById('btn-fullscreen');
+        // 燈箱控制
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
         const videoEl = document.getElementById('main-video');
         const standbyScreen = document.getElementById('standby-screen');
         const btnStartSystem = document.getElementById('btn-start-system');
         const startupOverlay = document.getElementById('startup-overlay');
-        
-        const timeCurrent = document.getElementById('time-current');
-        const timeTotal = document.getElementById('time-total');
-        const progressBar = document.getElementById('progress-bar');
+        const pitchBtns = document.querySelectorAll('.pitch-btn');
+        const pitchDisplay = document.getElementById('pitch-display');
         const btnPlayPause = document.getElementById('btn-play-pause');
-        const iconPlay = document.getElementById('icon-play');
-        const iconPause = document.getElementById('icon-pause');
         const btnNext = document.getElementById('btn-next');
         const btnVocalToggle = document.getElementById('btn-vocal-toggle');
-        const pitchDisplay = document.getElementById('pitch-display');
-        const pitchBtns = document.querySelectorAll('.pitch-btn');
-        
+        const progressBar = document.getElementById('progress-bar');
+        const timeCurrent = document.getElementById('time-current');
+        const timeTotal = document.getElementById('time-total');
         const searchBar = document.getElementById('search-bar');
         const searchResults = document.getElementById('search-results');
         const playlistUl = document.getElementById('playlist-ul');
-        const emptyPlaylist = document.getElementById('empty-playlist');
         const queueCount = document.getElementById('queue-count');
 
-        // 系統變數
         let isEngineReady = false;
         let pitchShiftNode = null;
-        let mediaSource = null;
         let currentPitch = 0;
-        let channelSplitter = null;
-        let leftGain = null;  
-        let rightGain = null; 
-        let isVocalGuideOn = false; 
-        
+        let leftGain, rightGain;
+        let isVocalGuideOn = false;
         let allSongs = [];
-        let playlist = []; 
+        let playlist = [];
         let currentPlayingId = null;
 
-        // 1. 網頁載入時立刻去抓雲端歌單
         window.onload = async function() {
             try {
-                const response = await fetch(GAS_WEB_APP_URL, { redirect: 'follow' });
-                if (!response.ok) throw new Error('連線失敗');
-                allSongs = await response.json();
+                const res = await fetch(GAS_WEB_APP_URL, { redirect: 'follow' });
+                const rawSongs = await res.json();
+                // 💡 前端自動清理檔名前綴
+                allSongs = rawSongs.map(s => ({
+                    ...s,
+                    name: s.name.replace('[KTV] ', '').replace('[KTV]', '')
+                }));
                 document.getElementById('loading-text').innerText = `已載入 ${allSongs.length} 首`;
-                document.getElementById('loading-text').classList.remove('animate-pulse', 'text-ktv-secondary');
                 document.getElementById('loading-text').classList.add('text-green-400');
                 renderCloudLibrary(allSongs);
-            } catch (error) {
+            } catch (e) {
                 document.getElementById('loading-text').innerText = '載入失敗';
-                document.getElementById('loading-text').classList.replace('text-ktv-secondary', 'text-red-400');
+                document.getElementById('loading-text').classList.add('text-red-400');
             }
         };
 
-        // 2. 啟動音訊引擎 (Tone.js)
         btnStartSystem.addEventListener('click', async () => {
-            try {
-                await Tone.start();
-                const audioContext = Tone.context.rawContext;
-                
-                // 設定 Web Audio API 節點
-                mediaSource = audioContext.createMediaElementSource(videoEl);
-                channelSplitter = new Tone.Split(2); 
-                leftGain = new Tone.Gain(1);  
-                rightGain = new Tone.Gain(0); 
-                
-                Tone.connect(mediaSource, channelSplitter);
-                channelSplitter.connect(leftGain, 0, 0);  
-                channelSplitter.connect(rightGain, 1, 0); 
-                
-                pitchShiftNode = new Tone.PitchShift({ pitch: 0, windowSize: 0.1 }).toDestination();
-                leftGain.connect(pitchShiftNode);
-                rightGain.connect(pitchShiftNode);
-
-                isEngineReady = true;
-                startupOverlay.style.opacity = '0';
-                setTimeout(() => startupOverlay.remove(), 500);
-                
-                // 時鐘
-                setInterval(() => {
-                    const now = new Date();
-                    document.getElementById('clock').innerText = now.toLocaleTimeString('zh-TW', {hour12: false});
-                }, 1000);
-            } catch (err) {
-                console.error(err);
-                alert("音訊引擎啟動失敗，請確認瀏覽器支援。");
-            }
-        });
-
-        // 3. 雲端歌庫搜尋與渲染功能
-        searchBar.addEventListener('input', (e) => {
-            const keyword = e.target.value.toLowerCase().trim();
-            const filteredSongs = allSongs.filter(song => song.name.toLowerCase().includes(keyword));
-            renderCloudLibrary(filteredSongs);
+            await Tone.start();
+            const source = Tone.context.rawContext.createMediaElementSource(videoEl);
+            const splitter = new Tone.Split(2);
+            leftGain = new Tone.Gain(1);
+            rightGain = new Tone.Gain(0);
+            pitchShiftNode = new Tone.PitchShift(0).toDestination();
+            Tone.connect(source, splitter);
+            splitter.connect(leftGain, 0, 0);
+            splitter.connect(rightGain, 1, 0);
+            leftGain.connect(pitchShiftNode);
+            rightGain.connect(pitchShiftNode);
+            isEngineReady = true;
+            startupOverlay.classList.add('opacity-0');
+            setTimeout(() => startupOverlay.remove(), 500);
+            setInterval(() => {
+                document.getElementById('clock').innerText = new Date().toLocaleTimeString('zh-TW', {hour12: false});
+            }, 1000);
         });
 
         function renderCloudLibrary(songs) {
-            searchResults.innerHTML = '';
-            if (songs.length === 0) {
-                searchResults.innerHTML = '<p class="text-gray-500 text-center mt-4">找不到歌曲</p>';
-                return;
-            }
-            songs.forEach(song => {
-                const btn = document.createElement('button');
-                btn.className = 'w-full text-left p-3 mb-1 bg-gray-800 hover:bg-ktv-primary/60 rounded-lg text-sm text-gray-200 hover:text-white transition-colors truncate border border-transparent hover:border-ktv-primary';
-                btn.innerHTML = `<span class="mr-2 text-ktv-secondary">+</span> ${song.name}`;
-                btn.onclick = () => addCloudSongToQueue(song);
-                searchResults.appendChild(btn);
-            });
+            searchResults.innerHTML = songs.map(song => `
+                <button onclick="addSong('${song.id}', '${song.name}')" class="w-full text-left p-3 mb-1 bg-gray-800 hover:bg-ktv-primary/60 rounded-lg text-sm truncate border border-transparent hover:border-ktv-primary transition-all">
+                    <span class="mr-2 text-ktv-secondary text-lg">+</span> ${song.name}
+                </button>
+            `).join('') || '<p class="text-gray-600 text-center mt-4">找不到相關歌曲</p>';
         }
 
-        // 4. 將雲端歌曲加入待播歌單
-        function addCloudSongToQueue(cloudSong) {
-            const streamUrl = `https://www.googleapis.com/drive/v3/files/${cloudSong.id}?alt=media&key=${GOOGLE_API_KEY}`;
-            const queueSong = {
-                id: Date.now() + Math.random().toString(36).substr(2, 9),
-                url: streamUrl,
-                name: cloudSong.name
-            };
-            playlist.push(queueSong);
+        searchBar.addEventListener('input', (e) => {
+            const kw = e.target.value.toLowerCase().trim();
+            renderCloudLibrary(allSongs.filter(s => s.name.toLowerCase().includes(kw)));
+        });
+
+        function addSong(id, name) {
+            const song = { uid: Date.now(), id, name, url: `https://www.googleapis.com/drive/v3/files/${id}?alt=media&key=${GOOGLE_API_KEY}` };
+            playlist.push(song);
             renderPlaylist();
-            
-            // 如果目前沒在唱歌，直接開始播放
-            if (!currentPlayingId) {
-                playSong(queueSong.id);
-            }
+            if (!currentPlayingId) playSong(song.uid);
         }
 
-        // 5. 渲染待播歌單 (沿用廠長邏輯)
         function renderPlaylist() {
-            playlistUl.innerHTML = '';
             queueCount.innerText = playlist.length;
-            if (playlist.length === 0) {
-                emptyPlaylist.classList.remove('hidden');
-            } else {
-                emptyPlaylist.classList.add('hidden');
-            }
-
-            playlist.forEach((song, index) => {
-                const isPlaying = song.id === currentPlayingId;
-                const li = document.createElement('li');
-                li.className = `group flex items-center justify-between p-3 rounded-xl border ${isPlaying ? 'bg-ktv-primary/20 border-ktv-primary text-white shadow-[0_0_10px_rgba(176,38,255,0.2)]' : 'bg-white/5 border-transparent text-gray-300 hover:bg-white/10'} transition-colors cursor-pointer`;
-                
-                li.innerHTML = `
-                    <div class="flex-1 flex items-center gap-3 overflow-hidden" onclick="playSong('${song.id}')">
-                        <div class="w-6 text-center font-mono text-sm ${isPlaying ? 'text-ktv-secondary animate-pulse' : 'text-gray-500'}">
-                            ${isPlaying ? '▶' : index + 1}
-                        </div>
-                        <div class="truncate font-medium text-sm pr-2">${song.name}</div>
+            document.getElementById('empty-playlist').classList.toggle('hidden', playlist.length > 0);
+            playlistUl.innerHTML = playlist.map((s, i) => `
+                <li class="group flex items-center justify-between p-3 rounded-xl border ${s.uid === currentPlayingId ? 'bg-ktv-primary/20 border-ktv-primary' : 'bg-white/5 border-transparent'}">
+                    <div class="flex-1 truncate cursor-pointer" onclick="playSong(${s.uid})">
+                        <span class="font-mono mr-2 text-gray-500">${s.uid === currentPlayingId ? '▶' : i+1}</span>
+                        <span class="text-sm font-medium">${s.name}</span>
                     </div>
-                    <div class="flex items-center opacity-0 group-hover:opacity-100 transition-all focus-within:opacity-100">
-                        ${!isPlaying ? `<button class="insert-btn p-2 text-gray-400 hover:text-ktv-secondary hover:scale-110 transition-all" data-id="${song.id}" title="優先插播">⬆️</button>` : ''}
-                        <button class="delete-btn p-2 text-gray-400 hover:text-red-400 hover:scale-110 transition-all" data-id="${song.id}" title="刪除">✕</button>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="removeSong(${s.uid})" class="text-gray-500 hover:text-red-400">✕</button>
                     </div>
-                `;
-                playlistUl.appendChild(li);
-            });
-
-            document.querySelectorAll('.delete-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => { e.stopPropagation(); removeSong(e.target.getAttribute('data-id')); });
-            });
-            document.querySelectorAll('.insert-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => { e.stopPropagation(); insertNext(e.target.getAttribute('data-id')); });
-            });
+                </li>
+            `).join('');
         }
 
-        // 6. 播放器核心邏輯
-        function playSong(id) {
-            const songIndex = playlist.findIndex(s => s.id === id);
-            if (songIndex === -1) return;
-            const song = playlist[songIndex];
-            currentPlayingId = song.id;
-            
+        function playSong(uid) {
+            const song = playlist.find(s => s.uid === uid);
+            if (!song) return;
+            currentPlayingId = uid;
             videoEl.src = song.url;
-            standbyScreen.classList.add('hidden');
             videoEl.classList.remove('hidden');
-            
+            standbyScreen.classList.add('hidden');
             updatePitch(0);
-            setVocalMode(false); 
-            
             videoEl.play();
-            updatePlayPauseUI(true);
-            
-            btnPlayPause.disabled = false;
-            btnNext.disabled = false;
-            btnVocalToggle.disabled = false;
-            renderPlaylist(); 
-        }
-
-        function removeSong(id) {
-            const songIndex = playlist.findIndex(s => s.id === id);
-            if (songIndex === -1) return;
-            playlist.splice(songIndex, 1);
-            if (id === currentPlayingId) playNext();
-            else renderPlaylist();
-        }
-
-        function insertNext(id) {
-            const songIndex = playlist.findIndex(s => s.id === id);
-            if (songIndex === -1 || playlist[songIndex].id === currentPlayingId) return;
-            const [song] = playlist.splice(songIndex, 1);
-            const currentIndex = playlist.findIndex(s => s.id === currentPlayingId);
-            if (currentIndex !== -1) playlist.splice(currentIndex + 1, 0, song);
-            else { playlist.unshift(song); playSong(song.id); }
+            btnPlayPause.disabled = btnNext.disabled = btnVocalToggle.disabled = false;
             renderPlaylist();
+        }
+
+        function removeSong(uid) {
+            playlist = playlist.filter(s => s.uid !== uid);
+            if (uid === currentPlayingId) playNext(); else renderPlaylist();
         }
 
         function playNext() {
-            if (playlist.length === 0) return resetPlayer();
-            const currentIndex = playlist.findIndex(s => s.id === currentPlayingId);
-            if (currentIndex !== -1) {
-                playlist.splice(currentIndex, 1);
-            }
-            if (playlist.length > 0) playSong(playlist[0].id);
-            else resetPlayer();
+            const idx = playlist.findIndex(s => s.uid === currentPlayingId);
+            if (idx !== -1) playlist.splice(idx, 1);
+            if (playlist.length > 0) playSong(playlist[0].uid); else resetPlayer();
         }
 
         function resetPlayer() {
-            currentPlayingId = null;
-            videoEl.pause();
-            videoEl.src = "";
-            videoEl.classList.add('hidden');
-            standbyScreen.classList.remove('hidden');
-            
-            btnPlayPause.disabled = true;
-            btnNext.disabled = true;
-            btnVocalToggle.disabled = true;
-            updatePlayPauseUI(false);
-            updatePitch(0);
+            currentPlayingId = null; videoEl.pause(); videoEl.src = "";
+            videoEl.classList.add('hidden'); standbyScreen.classList.remove('hidden');
+            btnPlayPause.disabled = btnNext.disabled = btnVocalToggle.disabled = true;
             renderPlaylist();
         }
 
-        // 7. 伴唱模式與控制台操作
-        function setVocalMode(isGuide) {
-            isVocalGuideOn = isGuide;
-            if (isGuide) {
-                leftGain.gain.rampTo(0, 0.1);
-                rightGain.gain.rampTo(1, 0.1);
-                btnVocalToggle.innerHTML = "🧑‍🎤 導唱模式";
-                btnVocalToggle.className = "px-4 py-2 md:px-5 md:py-3 rounded-full border border-ktv-secondary bg-ktv-secondary/20 text-ktv-secondary hover:bg-ktv-secondary hover:text-white font-bold transition-all text-sm md:text-base";
-            } else {
-                leftGain.gain.rampTo(1, 0.1);
-                rightGain.gain.rampTo(0, 0.1);
-                btnVocalToggle.innerHTML = "🎤 伴唱模式";
-                btnVocalToggle.className = "px-4 py-2 md:px-5 md:py-3 rounded-full border border-ktv-primary text-ktv-primary hover:bg-ktv-primary hover:text-white font-bold transition-all text-sm md:text-base";
-            }
+        function updatePitch(v) {
+            currentPitch = v; if (pitchShiftNode) pitchShiftNode.pitch = v;
+            pitchDisplay.innerText = v === 0 ? "原調" : (v > 0 ? `+${v}` : v);
+            pitchDisplay.className = `text-2xl font-mono font-bold ${v === 0 ? 'text-green-400' : (v > 0 ? 'text-red-400' : 'text-blue-400')}`;
         }
 
-        btnVocalToggle.addEventListener('click', () => setVocalMode(!isVocalGuideOn));
-        videoEl.addEventListener('ended', playNext);
-        btnNext.addEventListener('click', playNext);
-        btnPlayPause.addEventListener('click', () => {
-            if (videoEl.paused) { videoEl.play(); updatePlayPauseUI(true); } 
-            else { videoEl.pause(); updatePlayPauseUI(false); }
+        pitchBtns.forEach(b => b.addEventListener('click', () => {
+            const p = b.dataset.pitch;
+            if (p === 'up') updatePitch(Math.min(12, currentPitch + 1));
+            else if (p === 'down') updatePitch(Math.max(-12, currentPitch - 1));
+            else updatePitch(parseInt(p));
+        }));
+
+        btnVocalToggle.addEventListener('click', () => {
+            isVocalGuideOn = !isVocalGuideOn;
+            leftGain.gain.rampTo(isVocalGuideOn ? 0 : 1, 0.1);
+            rightGain.gain.rampTo(isVocalGuideOn ? 1 : 0, 0.1);
+            btnVocalToggle.innerText = isVocalGuideOn ? "🧑‍🎤 導唱模式" : "🎤 伴唱模式";
+            btnVocalToggle.classList.toggle('border-ktv-secondary', isVocalGuideOn);
+            btnVocalToggle.classList.toggle('text-ktv-secondary', isVocalGuideOn);
         });
 
-        function updatePlayPauseUI(isPlaying) {
-            if (isPlaying) { iconPlay.classList.add('hidden'); iconPause.classList.remove('hidden'); } 
-            else { iconPlay.classList.remove('hidden'); iconPause.classList.add('hidden'); }
-        }
+        videoEl.onended = playNext;
+        btnPlayPause.onclick = () => { videoEl.paused ? videoEl.play() : videoEl.pause(); };
+        videoEl.onplay = () => { document.getElementById('icon-play').classList.add('hidden'); document.getElementById('icon-pause').classList.remove('hidden'); };
+        videoEl.onpause = () => { document.getElementById('icon-play').classList.remove('hidden'); document.getElementById('icon-pause').classList.add('hidden'); };
+        videoEl.ontimeupdate = () => { if (videoEl.duration) { progressBar.value = (videoEl.currentTime / videoEl.duration) * 100; timeCurrent.innerText = formatTime(videoEl.currentTime); } };
+        videoEl.onloadedmetadata = () => timeTotal.innerText = formatTime(videoEl.duration);
+        progressBar.oninput = (e) => { if (videoEl.duration) videoEl.currentTime = (e.target.value / 100) * videoEl.duration; };
+        function formatTime(s) { const m = Math.floor(s/60); const ss = Math.floor(s%60); return `${m.toString().padStart(2,'0')}:${ss.toString().padStart(2,'0')}`; }
 
-        function updatePitch(val) {
-            currentPitch = val;
-            if (pitchShiftNode) pitchShiftNode.pitch = currentPitch;
-            
-            if (currentPitch > 0) { pitchDisplay.innerText = `+${currentPitch}`; pitchDisplay.className = "text-xl md:text-2xl font-mono font-bold text-red-400"; } 
-            else if (currentPitch < 0) { pitchDisplay.innerText = currentPitch; pitchDisplay.className = "text-xl md:text-2xl font-mono font-bold text-blue-400"; } 
-            else { pitchDisplay.innerText = "原調"; pitchDisplay.className = "text-xl md:text-2xl font-mono font-bold text-green-400"; }
-        }
-
-        pitchBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const action = e.target.getAttribute('data-pitch');
-                if (action === 'up' && currentPitch < 12) updatePitch(currentPitch + 1);
-                else if (action === 'down' && currentPitch > -12) updatePitch(currentPitch - 1);
-                else if (action !== 'up' && action !== 'down') updatePitch(parseInt(action));
-            });
-        });
-
-        // 8. 介面更新與快捷鍵
-        function formatTime(seconds) {
-            if (isNaN(seconds) || !isFinite(seconds)) return "00:00";
-            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
-            const s = Math.floor(seconds % 60).toString().padStart(2, '0');
-            return `${m}:${s}`;
-        }
-
-        videoEl.addEventListener('loadedmetadata', () => timeTotal.innerText = formatTime(videoEl.duration));
-        videoEl.addEventListener('timeupdate', () => {
-            if (videoEl.duration) {
-                progressBar.value = (videoEl.currentTime / videoEl.duration) * 100;
-                timeCurrent.innerText = formatTime(videoEl.currentTime);
-            }
-        });
-        progressBar.addEventListener('input', (e) => { if (videoEl.duration) videoEl.currentTime = (e.target.value / 100) * videoEl.duration; });
-
-        btnFullscreen.addEventListener('click', () => {
-            if (!document.fullscreenElement) videoContainer.requestFullscreen().catch(() => alert('不支援全螢幕'));
+        document.getElementById('btn-fullscreen').onclick = () => {
+            if (!document.fullscreenElement) document.getElementById('video-container').requestFullscreen();
             else document.exitFullscreen();
-        });
+        };
 
-        window.addEventListener('keydown', (e) => {
-            if (!isEngineReady || currentPlayingId === null) return;
-            
-            if (document.activeElement === searchBar) return;
-
-            if (['Space', 'ArrowUp', 'ArrowDown'].includes(e.code)) e.preventDefault();
+        window.onkeydown = (e) => {
+            if (!isEngineReady || document.activeElement === searchBar) return;
             switch(e.code) {
-                case 'Space': btnPlayPause.click(); break;
+                case 'Space': e.preventDefault(); btnPlayPause.click(); break;
                 case 'KeyN': btnNext.click(); break;
                 case 'KeyV': btnVocalToggle.click(); break;
-                case 'KeyF': btnFullscreen.click(); break;
-                case 'ArrowUp': if (currentPitch < 12) updatePitch(currentPitch + 1); break;
-                case 'ArrowDown': if (currentPitch > -12) updatePitch(currentPitch - 1); break;
+                case 'KeyF': document.getElementById('btn-fullscreen').click(); break;
+                case 'ArrowUp': e.preventDefault(); updatePitch(Math.min(12, currentPitch + 1)); break;
+                case 'ArrowDown': e.preventDefault(); updatePitch(Math.max(-12, currentPitch - 1)); break;
             }
-        });
+        };
     </script>
 </body>
 </html>
