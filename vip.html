@@ -102,12 +102,24 @@
             
             <div class="bg-ktv-panel rounded-2xl border border-white/10 flex flex-col h-[350px] lg:h-1/2 lg:min-h-[250px]">
                 <div class="p-4 border-b border-white/10">
-                    <h2 class="text-lg font-bold flex items-center justify-between mb-3">
-                        <span class="flex items-center gap-2">☁️ 雲端歌庫</span>
-                        <span id="loading-text" class="text-xs text-ktv-secondary font-normal animate-pulse">連線中...</span>
-                    </h2>
-                    <input type="text" id="search-bar" placeholder="輸入歌名搜尋..." class="w-full p-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:border-ktv-secondary">
-                </div>
+										<div class="flex items-center justify-between mb-3">
+												<h2 class="text-lg font-bold flex items-center gap-2">
+														☁️ 雲端歌庫
+												</h2>
+												<div class="flex items-center gap-3">
+														<span id="loading-text" class="text-xs text-ktv-secondary font-normal animate-pulse">連線中...</span>
+														
+														<a href="https://ytmp3.as/AOPR/" target="_blank" rel="noopener noreferrer" 
+															 class="px-3 py-1.5 bg-gradient-to-r from-ktv-primary to-ktv-danger hover:from-pink-500 hover:to-orange-400 text-white text-xs font-bold rounded-full shadow-[0_0_10px_rgba(255,20,147,0.4)] transition-all hover:scale-105 flex items-center gap-1">
+																➕ 自助加歌
+														</a>
+												</div>
+										</div>
+										
+										<input type="text" id="search-bar" placeholder="輸入歌名搜尋..." class="w-full p-2 bg-gray-800 text-white rounded-lg border border-gray-700 focus:outline-none focus:border-ktv-secondary transition-colors mb-2">
+										
+										<p class="text-[10px] text-gray-400">💡 提示：使用自助加歌上傳 MP4 後，在我的主機開機的情況下，系統約需 5-10 分鐘進行去人聲處理，請稍候再重新整理網頁。</p>
+								</div>
                 <div class="flex-1 overflow-y-auto p-2" id="search-results">
                     </div>
             </div>
