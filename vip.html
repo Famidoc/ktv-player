@@ -46,6 +46,7 @@
                 <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-gray-400">播放 / 暫停</span><span class="text-white font-mono bg-white/10 px-2 rounded">[空白鍵]</span></li>
                 <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-gray-400">切換下一首</span><span class="text-white font-mono bg-white/10 px-2 rounded">[ N ]</span></li>
                 <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-gray-400">導唱 / 伴唱切換</span><span class="text-white font-mono bg-white/10 px-2 rounded">[ V ]</span></li>
+                <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-gray-400">全螢幕切換</span><span class="text-white font-mono bg-white/10 px-2 rounded">[ F ]</span></li>
                 <li class="flex justify-between border-b border-white/5 pb-2"><span class="text-gray-400">升高 / 降低音調</span><span class="text-white font-mono bg-white/10 px-2 rounded">[↑] / [↓]</span></li>
             </ul>
             <button onclick="closeModal('modal-shortcuts')" class="mt-8 w-full py-3 text-lg bg-white/10 hover:bg-white/20 rounded-xl font-bold">我知道了</button>
@@ -54,16 +55,31 @@
 
     <div id="modal-help" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 modal-overlay" onclick="closeModal('modal-help')"></div>
-        <div class="relative bg-ktv-panel border border-ktv-danger/50 w-full max-w-2xl rounded-3xl p-6 md:p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
-            <h3 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-ktv-primary to-ktv-danger mb-6">🍽️ 自助點菜指南</h3>
-            <div class="space-y-4 text-gray-200 text-base md:text-lg">
-                <p>1. 提供 Gmail 給廠長開放 <span class="text-ktv-secondary">[MVs]</span> 共享編輯權限。</p>
-                <p>2. 找到 YouTube 影片網址（建議 KTV 版，需有人聲）。</p>
-                <p>3. 點擊 <span class="text-ktv-danger font-bold">[+自助加歌]</span> 使用 yt2mp3 轉成 MP4 並存入共享資料夾。</p>
-                <p>4. 機器人 <span class="text-ktv-secondary">KTV Agent</span> 會在後台自動完成去人聲處理。</p>
-                <p class="text-sm md:text-base bg-white/5 p-4 rounded-lg border-l-4 border-ktv-danger">⏳ 提醒：機器人隨廠長電腦啟動，只要開機中，10 分鐘內即可開唱。</p>
+        <div class="relative bg-ktv-panel border border-ktv-danger/50 w-full max-w-3xl rounded-3xl p-6 md:p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 class="text-2xl md:text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-ktv-primary to-ktv-danger mb-6">🍽️ 自助點菜指南 (加歌教學)</h3>
+            <div class="space-y-6 text-gray-200 leading-relaxed text-sm md:text-base">
+                <div class="flex gap-4">
+                    <span class="flex-shrink-0 w-8 h-8 bg-ktv-primary rounded-full flex items-center justify-center font-bold text-white mt-1">1</span>
+                    <p>首先要提供你的 <span class="text-ktv-secondary">Gmail</span>，讓我開放我的雲端硬碟中共享出來的資料夾 <span class="bg-white/10 px-2 rounded">[MVs]</span> 給你。</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="flex-shrink-0 w-8 h-8 bg-ktv-primary rounded-full flex items-center justify-center font-bold text-white mt-1">2</span>
+                    <p>先在 YouTube 中，找出你想加的歌。最好選有清楚動態字幕的版本，如 ktv 版，但<span class="text-yellow-400">必須有人聲</span>，不能是純伴奏版。找到目標後，把網址先複製下來。</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="flex-shrink-0 w-8 h-8 bg-ktv-primary rounded-full flex items-center justify-center font-bold text-white mt-1">3</span>
+                    <p>點 <span class="text-ktv-danger font-bold">[+自助加歌]</span> 後會以新網頁開啟一個外部免費 app：yt2mp3。貼上你剛才複製下來的網址，點 <span class="bg-gray-700 px-1.5 py-0.5 rounded text-sm text-white">MP3</span>，讓它變成 <span class="bg-gray-700 px-1.5 py-0.5 rounded text-sm text-white">MP4</span>，然後按 <span class="bg-blue-600 px-1.5 py-0.5 rounded text-sm text-white">Convert</span>，等一下下就可下載完成。按 <span class="bg-blue-600 px-1.5 py-0.5 rounded text-sm text-white">Download</span> 存到我共享出來的 <span class="bg-white/10 px-2 rounded">[MVs]</span> 資料夾。</p>
+                </div>
+                <div class="flex gap-4">
+                    <span class="flex-shrink-0 w-8 h-8 bg-ktv-primary rounded-full flex items-center justify-center font-bold text-white mt-1">4</span>
+                    <p>當 <span class="bg-white/10 px-2 rounded">[MVs]</span> 資料夾有新歌進來時，就會啟動我的 <span class="text-ktv-secondary">KTV Agent</span>，會在幕後自動把 MV 轉成左伴右唱的 KTV。然後，就可以在我們的雲端伴唱系統(VIP)中找到這首歌，直接開練。</p>
+                </div>
+                <div class="flex gap-4 border-l-4 border-ktv-danger pl-4 py-4 bg-white/5 rounded-r-xl">
+                    <span class="flex-shrink-0 w-8 h-8 bg-ktv-danger rounded-full flex items-center justify-center font-bold text-white mt-1">5</span>
+                    <p class="text-sm md:text-base"><span class="font-bold text-ktv-danger">⏳ 貼心提醒：</span> KTV Agent 這個機器人是長駐在我的電腦幕後，它會自動偵測 [MVs] 資料夾有沒有新歌進來，然後自動轉檔，並寫入我們的雲端歌庫。但是，<span class="text-white font-bold border-b border-white">只有當我的電腦在開機狀態下，它才能有動作</span>。只要我的電腦是在開機中，大約十分鐘之內，你就可以得到新的 KTV 歌。萬一，我的電腦關機中，也沒關係，只要原始歌檔有傳入 [MVs]，下次我電腦開機時，就會自動完成所有動作。</p>
+                </div>
             </div>
-            <button onclick="closeModal('modal-help')" class="mt-6 w-full py-4 text-lg bg-gradient-to-r from-ktv-primary to-ktv-danger rounded-xl font-bold">開始加歌</button>
+            <button onclick="closeModal('modal-help')" class="mt-8 w-full py-4 text-lg bg-gradient-to-r from-ktv-primary to-ktv-danger rounded-xl font-bold shadow-lg hover:scale-[1.02] transition-transform">我了解了，開始加歌</button>
         </div>
     </div>
 
@@ -84,6 +100,9 @@
                     <div class="text-6xl mb-4 opacity-40">🎵</div>
                     <h2 class="text-2xl text-gray-400 font-bold">專屬包廂・待機中</h2>
                 </div>
+                <button id="btn-fullscreen" class="absolute top-4 right-4 p-3 bg-black/50 hover:bg-black/80 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity z-10" title="全螢幕 (F)">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                </button>
             </div>
 
             <div class="mt-4 bg-ktv-panel rounded-2xl p-4 md:p-6 border border-white/10 flex flex-col gap-4">
@@ -140,7 +159,8 @@
                     <div class="flex items-center justify-between mb-3">
                         <h2 class="text-lg font-bold flex items-center gap-2">☁️ 雲端歌庫</h2>
                         <div class="flex items-center gap-2">
-                            <a href="https://yt2mp3.app" target="_blank" class="px-3 py-1.5 bg-ktv-danger text-xs font-bold rounded-md hover:bg-pink-500 transition-colors">➕ 自助加歌</a>
+                            <span id="loading-text" class="text-xs font-bold text-ktv-secondary animate-pulse mr-1">連線中...</span>
+                            <a href="https://www.yt2mp3.sc/" target="_blank" class="px-3 py-1.5 bg-ktv-danger text-xs font-bold rounded-md hover:bg-pink-500 transition-colors shadow-lg">➕ 自助加歌</a>
                             <button onclick="openModal('modal-help')" class="w-7 h-7 rounded-full border border-gray-500 text-gray-400 hover:text-white hover:border-white text-sm font-bold flex items-center justify-center">?</button>
                         </div>
                     </div>
@@ -170,6 +190,7 @@
     </footer>
 
     <script>
+        // 🚨 已更新為廠長指定的最新 GAS API 網址
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzRXbdzRcU01ccyb30Df1xOvxloroLAM40KzEVf1u_-Mo2zWpxkGDvVenNK74YsUGjcJw/exec';
         const GOOGLE_API_KEY = 'AIzaSyCWQrdC6i79MsLaYeks5HC6YviF2xKxl4I';
 
@@ -189,8 +210,22 @@
                 const songs = await res.json();
                 allSongs = songs.map(s => ({ ...s, name: s.name.replace('[KTV] ', '').replace('[KTV]', '') }));
                 renderCloudLibrary(allSongs);
-                document.getElementById('loading-text')?.remove();
-            } catch (e) { console.error("Load failed"); }
+                
+                const loadingText = document.getElementById('loading-text');
+                if (loadingText) {
+                    loadingText.innerText = `已載入 ${allSongs.length} 首`;
+                    loadingText.classList.remove('animate-pulse', 'text-ktv-secondary');
+                    loadingText.classList.add('text-green-400');
+                }
+            } catch (e) { 
+                console.error("Load failed"); 
+                const loadingText = document.getElementById('loading-text');
+                if (loadingText) {
+                    loadingText.innerText = '載入失敗';
+                    loadingText.classList.remove('text-ktv-secondary', 'animate-pulse');
+                    loadingText.classList.add('text-red-400');
+                }
+            }
         };
 
         document.getElementById('btn-start-system').onclick = async () => {
@@ -220,7 +255,6 @@
         };
 
         function renderCloudLibrary(songs) {
-            // 💡 將清單字體從 text-xs 提升為 text-sm 甚至 md:text-base，字體更大更好點
             document.getElementById('search-results').innerHTML = songs.map(s => `
                 <button onclick="addSong('${s.id}', '${s.name}')" class="w-full text-left p-3 mb-1 bg-gray-800 hover:bg-ktv-primary/40 rounded-lg text-sm md:text-base truncate transition-all border border-transparent hover:border-ktv-primary/50">
                     <span class="text-ktv-secondary font-bold mr-2 text-lg">+</span> ${s.name}
@@ -241,7 +275,6 @@
         }
 
         function renderPlaylist() {
-            // 💡 待播清單字體也一併提升為 text-sm md:text-base
             document.getElementById('queue-count').innerText = playlist.length;
             document.getElementById('playlist-ul').innerHTML = playlist.map((s, i) => `
                 <li class="flex items-center justify-between p-3 rounded-lg ${s.uid === currentPlayingId ? 'bg-ktv-primary/20 border border-ktv-primary/50' : 'bg-white/5'}">
@@ -303,6 +336,11 @@
             document.getElementById('btn-vocal-toggle').innerText = isGuide ? "🎤 伴唱" : "🧑‍🎤 導唱";
         };
 
+        document.getElementById('btn-fullscreen').onclick = () => {
+            if (!document.fullscreenElement) document.getElementById('video-container').requestFullscreen().catch(err => console.log(err));
+            else document.exitFullscreen();
+        };
+
         videoEl.onended = playNext;
         document.getElementById('btn-play-pause').onclick = () => { videoEl.paused ? videoEl.play() : videoEl.pause(); };
         videoEl.onplay = () => { document.getElementById('icon-play').classList.add('hidden'); document.getElementById('icon-pause').classList.remove('hidden'); };
@@ -319,6 +357,8 @@
             if (!isEngineReady || document.activeElement.tagName === 'INPUT') return;
             if (e.code === 'Space') { e.preventDefault(); document.getElementById('btn-play-pause').click(); }
             if (e.code === 'KeyN') playNext();
+            if (e.code === 'KeyV') document.getElementById('btn-vocal-toggle').click();
+            if (e.code === 'KeyF') document.getElementById('btn-fullscreen').click();
             if (e.code === 'ArrowUp') { e.preventDefault(); updatePitch(Math.min(12, currentPitch + 1)); }
             if (e.code === 'ArrowDown') { e.preventDefault(); updatePitch(Math.max(-12, currentPitch - 1)); }
         };
