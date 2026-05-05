@@ -341,7 +341,7 @@
             if (!document.fullscreenElement) document.getElementById('video-container').requestFullscreen().catch(err => console.log(err));
             else document.exitFullscreen();
         };
-
+				document.getElementById('btn-next').onclick = playNext;
         videoEl.onended = playNext;
         document.getElementById('btn-play-pause').onclick = () => { videoEl.paused ? videoEl.play() : videoEl.pause(); };
         videoEl.onplay = () => { document.getElementById('icon-play').classList.add('hidden'); document.getElementById('icon-pause').classList.remove('hidden'); };
