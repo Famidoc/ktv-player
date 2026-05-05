@@ -1,0 +1,16 @@
+{
+  "name": "KTV VIP 雲端包廂",
+  "short_name": "KTV VIP",
+  "description": "專屬雲端點歌伴唱系統",
+  "start_url": "/ktv-player/vip.html", 
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#b026ff",
+  "icons": [    
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
