@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KTV VIP 雲端包廂 | KTV Maker Pro</title>
-		<link rel="manifest" href="manifest-vip.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <script>
@@ -191,7 +190,6 @@
     </footer>
 
     <script>
-        // 🚨 已更新為廠長指定的最新 GAS API 網址
         const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzRXbdzRcU01ccyb30Df1xOvxloroLAM40KzEVf1u_-Mo2zWpxkGDvVenNK74YsUGjcJw/exec';
         const GOOGLE_API_KEY = 'AIzaSyCWQrdC6i79MsLaYeks5HC6YviF2xKxl4I';
 
@@ -275,14 +273,18 @@
             if (!currentPlayingId) playSong(s.uid);
         }
 
+        // 🌟 補回與優化：待播清單的「插播」與「刪除」按鈕
         function renderPlaylist() {
             document.getElementById('queue-count').innerText = playlist.length;
             document.getElementById('playlist-ul').innerHTML = playlist.map((s, i) => `
-                <li class="flex items-center justify-between p-3 rounded-lg ${s.uid === currentPlayingId ? 'bg-ktv-primary/20 border border-ktv-primary/50' : 'bg-white/5'}">
-                    <div class="flex-1 truncate cursor-pointer text-sm md:text-base" onclick="playSong(${s.uid})">
-                        <span class="text-xs text-gray-500 mr-3 font-mono">${s.uid === currentPlayingId ? '▶' : i+1}</span> ${s.name}
+                <li class="flex items-center justify-between p-3 rounded-lg ${s.uid === currentPlayingId ? 'bg-ktv-primary/20 border border-ktv-primary/50' : 'bg-white/5 transition-colors'}">
+                    <div class="flex-1 truncate cursor-pointer text-sm md:text-base pr-2" onclick="playSong(${s.uid})">
+                        <span class="text-xs text-gray-500 mr-2 font-mono">${s.uid === currentPlayingId ? '▶' : i+1}</span> ${s.name}
                     </div>
-                    <button onclick="removeSong(${s.uid})" class="text-gray-500 hover:text-red-400 ml-3 text-lg">✕</button>
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        ${s.uid !== currentPlayingId ? `<button onclick="insertNext(${s.uid})" class="text-gray-400 hover:text-ktv-secondary text-base md:text-lg transition-colors" title="優先插播">⬆️</button>` : ''}
+                        <button onclick="removeSong(${s.uid})" class="text-gray-500 hover:text-red-400 text-base md:text-lg transition-colors" title="刪除">✕</button>
+                    </div>
                 </li>
             `).join('');
         }
@@ -303,6 +305,25 @@
         function removeSong(uid) {
             playlist = playlist.filter(x => x.uid !== uid);
             if (uid === currentPlayingId) playNext(); else renderPlaylist();
+        }
+
+        // 🌟 補回：插播功能邏輯
+        function insertNext(uid) {
+            const songIndex = playlist.findIndex(x => x.uid === uid);
+            if (songIndex === -1 || playlist[songIndex].uid === currentPlayingId) return;
+            
+            const [song] = playlist.splice(songIndex, 1);
+            const currentIndex = playlist.findIndex(x => x.uid === currentPlayingId);
+            
+            if (currentIndex !== -1) {
+                // 插播到目前播放的下一首
+                playlist.splice(currentIndex + 1, 0, song);
+            } else {
+                // 如果目前沒在播放，直接放最前面並播放
+                playlist.unshift(song);
+                playSong(song.uid);
+            }
+            renderPlaylist();
         }
 
         function playNext() {
@@ -341,7 +362,9 @@
             if (!document.fullscreenElement) document.getElementById('video-container').requestFullscreen().catch(err => console.log(err));
             else document.exitFullscreen();
         };
-				document.getElementById('btn-next').onclick = playNext;
+
+        document.getElementById('btn-next').onclick = playNext;
+
         videoEl.onended = playNext;
         document.getElementById('btn-play-pause').onclick = () => { videoEl.paused ? videoEl.play() : videoEl.pause(); };
         videoEl.onplay = () => { document.getElementById('icon-play').classList.add('hidden'); document.getElementById('icon-pause').classList.remove('hidden'); };
